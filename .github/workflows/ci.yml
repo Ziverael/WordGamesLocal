@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ main ]
+
+env:
+  UV_NO_SYNC: 1
+
+permissions:
+  contents: read
+  checks: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  lint:
+    name: Lint (Python ${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.12"]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - name: Setup dependencies
+        run: uv sync --dev --locked
+
+      - name: Run lint
+        run: |
+          uv run ruff check . || ERROR=$?
+          uv run ruff format --check . || ERROR=$?
+          uv run mypy --incremental --show-error-codes --pretty || ERROR=$?
+          exit ${ERROR}
+
+      - name: Run tests
+        run: |
+          uv run pytest \
+            --cov word_games \
+            --junitxml=coverage/junit.xml \
+            --cov-report html:coverage/htmlcov \
+            --cov-report xml:coverage/coverage.xml \
+            --cache-clear \
+            --pyargs ./tests
+        env:
+          KIVY_NO_ARGS: 1
+
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: (!cancelled())
+        with:
+          files: |
+            coverage/junit.xml

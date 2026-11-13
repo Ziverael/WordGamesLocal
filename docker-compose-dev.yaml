@@ -1,0 +1,32 @@
+services:
+  # Images
+  wordgames-app-image:
+    image: wordgames-app-image:${IMAGE_TAG}
+    build:
+      context: .
+      dockerfile: _project/py-slim.dockerfile
+      args:
+        BASE_IMAGE: ${BASE_IMAGE}
+        PIP_VERSION: ${PIP_VERSION}
+        UV_VERSION: ${UV_VERSION}
+        UID: ${UID:-10001}
+        GUID: ${GUID:-10001}
+
+  # Services
+  # Headless helper for tests and tooling. The Kivy GUI runs on the host.
+  wordgames-app-dev-helper:
+    container_name: wordgames-app-dev-helper
+    hostname: wordgames-app-dev-helper
+    image: wordgames-app-image:${IMAGE_TAG}
+    user: root
+    command: sleep infinity
+    tty: true
+    stdin_open: true
+    environment:
+      HISTFILE: "/opt/word_games/.bash_history"
+      KIVY_NO_ARGS: "1"
+    volumes:
+      - ./word_games:/opt/word_games/word_games:Z
+      - ./tests:/opt/word_games/tests:Z
+      - ./.local/coverage:/opt/word_games/coverage:Z
+      - ./.local/.bash_history:/opt/word_games/.bash_history:Z
