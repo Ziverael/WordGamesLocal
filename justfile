@@ -12,7 +12,10 @@ help:
     echo_default "rebuild              Rebuild the dev helper image."
     echo_default "up                   Start the dev helper container."
     echo_default "down                 Stop all containers of the project."
-    echo_default "run                  Run the Word Games desktop app on the host."
+    echo_default "run                  Run a desktop client on the host. Example usage:"
+    echo_highlight "                         just run"
+    echo_highlight "                         just run student"
+    echo_default "package              Build both clients with PyInstaller into dist/."
     echo_title "Development recipes:"
     echo_default "bash                 Start bash session in helper container"
     echo_default "format               Format word_games code with ruff. Example usage:"
@@ -64,10 +67,16 @@ down:
     {{sh_init}}
     down_project
 
-run:
+default_client := 'teacher'
+run client=default_client:
     #!/usr/bin/env sh
     {{sh_init}}
-    run_app
+    run_app {{client}}
+
+package:
+    #!/usr/bin/env sh
+    {{sh_init}}
+    package_clients
 
 update_dotenv:
     #!/usr/bin/env sh

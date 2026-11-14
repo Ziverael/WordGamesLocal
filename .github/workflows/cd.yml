@@ -1,42 +1,107 @@
 name: CD
 
+# Every push to main builds both clients as workflow artifacts.
+# A v* tag additionally publishes them as a GitHub Release.
 on:
   push:
     branches: [ main ]
+    tags: [ "v*" ]
 
 env:
   UV_NO_SYNC: 1
 
+permissions:
+  contents: read
+
 jobs:
   build:
-    name: Build (Python ${{ matrix.python }})
-    runs-on: ubuntu-latest
+    name: Build clients (${{ matrix.platform }})
+    runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
-        python: ["3.12"]
+        include:
+          # Oldest available Ubuntu, so the bundle runs on older glibc too.
+          - os: ubuntu-22.04
+            platform: linux-x86_64
+          - os: windows-latest
+            platform: windows-x86_64
+          - os: macos-latest
+            platform: macos-arm64
+    defaults:
+      run:
+        shell: bash
     env:
       UV_NO_DEV: 1
+      KIVY_NO_ARGS: 1
+      # Keeps Kivy from taking over logging and flooding the build log.
+      KIVY_LOG_MODE: PYTHON
+      BUILD_VERSION: ${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
     steps:
       - uses: actions/checkout@v7
 
       - uses: actions/setup-python@v7
         with:
-          python-version: ${{ matrix.python }}
+          python-version: "3.12"
 
       - name: Prevent dirty lockfile
         run: git diff --exit-code uv.lock
 
+      - name: Check tag matches project version
+        if: github.ref_type == 'tag'
+        run: |
+          version=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+          if [ "v${version}" != "${GITHUB_REF_NAME}" ]; then
+            echo "::error::Tag ${GITHUB_REF_NAME} does not match pyproject version ${version}"
+            exit 1
+          fi
+
       - name: Install uv
-        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+        run: python -m pip install uv
 
       - name: Install dependencies
-        run: uv sync  --locked
+        run: uv sync --locked --group package
 
-      - name: Build package
-        run: uv build
+      - name: Build teacher and student clients
+        run: uv run pyinstaller --noconfirm packaging/word_games.spec
 
-      - name: Upload dist artifacts
+      - name: Zip clients
+        working-directory: dist
+        run: |
+          for client in word-games-teacher word-games-student; do
+            archive="${client}-${BUILD_VERSION}-${{ matrix.platform }}.zip"
+            case "${RUNNER_OS}" in
+              Linux)   zip -qry "${archive}" "${client}" ;;
+              macOS)   ditto -c -k --keepParent "${client}.app" "${archive}" ;;
+              Windows) 7z a -tzip "${archive}" "${client}" ;;
+            esac
+          done
+
+      - name: Upload client archives
         uses: actions/upload-artifact@v7
         with:
-          name: dist-py${{ matrix.python }}
-          path: dist/
+          name: clients-${{ matrix.platform }}
+          path: dist/*.zip
+          if-no-files-found: error
+
+  release:
+    name: Publish release
+    if: github.ref_type == 'tag'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Download client archives
+        run: gh run download "${GITHUB_RUN_ID}" --repo "${GITHUB_REPOSITORY}" --dir artifacts
+
+      - name: Create GitHub Release
+        run: |
+          gh release create "${GITHUB_REF_NAME}" artifacts/*/*.zip \
+            --repo "${GITHUB_REPOSITORY}" \
+            --title "Word Games ${GITHUB_REF_NAME}" \
+            --generate-notes \
+            --verify-tag
