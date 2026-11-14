@@ -55,7 +55,7 @@ def test_invalid_file_is_rejected(tmp_path, payload):
 def test_oversized_file_is_rejected(tmp_path):
     # given
     path = tmp_path / "big.json"
-    path.write_bytes(b" " * (_storage.MAX_ASSIGNMENT_FILE_BYTES + 1))
+    path.write_bytes(b" " * (_storage._MAX_ASSIGNMENT_FILE_BYTES + 1))
 
     # when
     with pytest.raises(InvalidAssignmentFileError) as error:

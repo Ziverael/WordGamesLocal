@@ -12,6 +12,7 @@ doing so, but no offline scheme can prevent it.
 
 import hashlib
 import hmac
+import re
 import secrets
 import unicodedata
 from typing import Final
@@ -26,7 +27,8 @@ _SCRYPT_MAX_MEMORY: Final[int] = 64 * 1024 * 1024
 
 
 def normalize_answer(answer: Answer) -> str:
-    return unicodedata.normalize("NFKC", answer.strip()).casefold()
+    whitespace_normed = re.sub(r"\s+", " ", answer.strip())
+    return unicodedata.normalize("NFKC", whitespace_normed).casefold()
 
 
 def digest_answer(

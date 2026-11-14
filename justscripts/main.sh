@@ -40,8 +40,15 @@ down_project(){
 }
 
 run_app(){
-    echo_title "Starting Word Games..."
-    uv run word-games
+    echo_title "Starting Word Games ($1 client)..."
+    uv run "word-games-$1"
+}
+
+package_clients(){
+    echo_title "Building teacher and student clients into dist/..."
+    # Without this Kivy takes over Python logging and prints PyInstaller's
+    # debug and trace records: hundreds of thousands of lines per build.
+    KIVY_LOG_MODE=PYTHON uv run --group package pyinstaller --noconfirm packaging/word_games.spec
 }
 
 stop_project_services(){

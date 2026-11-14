@@ -32,5 +32,6 @@ def test_public_content_does_not_pair_lefts_with_rights(matching):
     split = matching.split_answers()
 
     # then
-    assert "item_id" not in str(split.public["rights"])
-    assert sorted(split.public["rights"]) == ["kot", "pies", "ryba"]
+    assert "item_id" not in str(split.public["rows"][0])
+    rights = [row["right"] for row in split.public["rows"]]
+    assert sorted(rights) == ["kot", "pies", "ryba"]
