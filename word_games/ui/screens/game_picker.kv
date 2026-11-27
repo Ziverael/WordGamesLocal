@@ -1,0 +1,18 @@
+#:import dp kivy.metrics.dp
+
+<GamePickerScreen>:
+    BoxLayout:
+        orientation: "vertical"
+        ScreenHeader:
+            title: root.heading
+        ScrollView:
+            do_scroll_x: False
+            GridLayout:
+                id: grid
+                # The padding leaves room for a hovered tile to grow and tilt
+                # without being clipped by the scroll area.
+                cols: max(1, int((self.width - dp(88)) // dp(224)))
+                size_hint_y: None
+                height: self.minimum_height
+                padding: dp(56)
+                spacing: dp(24)

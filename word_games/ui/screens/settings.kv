@@ -1,0 +1,124 @@
+#:import dp kivy.metrics.dp
+#:import palette word_games.ui.palette.palette
+#:import preferences word_games.ui.preferences.preferences
+
+<Swatch>:
+    size_hint: None, None
+    size: dp(24), dp(24)
+    pos_hint: {"center_y": 0.5}
+    canvas:
+        Color:
+            rgba: self.color
+        Ellipse:
+            pos: self.pos
+            size: self.size
+        Color:
+            rgba: palette.border
+        Line:
+            circle: self.center_x, self.center_y, self.width / 2
+            width: dp(1)
+
+<ThemeOption>:
+    size_hint_y: None
+    height: dp(64)
+    padding: dp(20), dp(8)
+    spacing: dp(16)
+    canvas.before:
+        Color:
+            rgba: palette.surface_pressed if self.selected or self.state == "down" else palette.surface
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(12)]
+        Color:
+            rgba: palette.accent if self.selected else palette.border
+        Line:
+            rounded_rectangle: (*self.pos, *self.size, dp(12))
+            width: dp(2) if self.selected else dp(1)
+    Label:
+        text: root.title
+        font_size: "18sp"
+        bold: root.selected
+        color: palette.text
+        halign: "left"
+        valign: "middle"
+        text_size: self.size
+    BoxLayout:
+        id: swatches
+        size_hint_x: None
+        width: self.minimum_width
+        spacing: dp(8)
+
+<CheckOption>:
+    spacing: dp(12)
+    on_release: self.active = not self.active
+    CheckBox:
+        size_hint_x: None
+        width: dp(32)
+        color: palette.accent
+        active: root.active
+        on_active: root.active = self.active
+    BoxLayout:
+        orientation: "vertical"
+        Label:
+            text: root.title
+            font_size: "18sp"
+            color: palette.text
+            halign: "left"
+            valign: "bottom"
+            text_size: self.size
+        Label:
+            text: root.description
+            font_size: "14sp"
+            color: palette.text_muted
+            halign: "left"
+            valign: "top"
+            text_size: self.size
+
+<SettingsScreen>:
+    BoxLayout:
+        orientation: "vertical"
+        ScreenHeader:
+            title: "Settings"
+        BoxLayout:
+            orientation: "vertical"
+            padding: dp(24), dp(8)
+            spacing: dp(12)
+            Label:
+                text: "Theme"
+                size_hint_y: None
+                height: self.texture_size[1]
+                font_size: "16sp"
+                bold: True
+                color: palette.text_muted
+                halign: "left"
+                text_size: self.width, None
+            BoxLayout:
+                id: themes
+                orientation: "vertical"
+                size_hint: None, None
+                width: min(dp(520), self.parent.width - dp(48))
+                height: self.minimum_height
+                spacing: dp(12)
+            Label:
+                text: "Cursor"
+                size_hint_y: None
+                # Width only: a height-bound text_size would grow with the
+                # padding on every layout pass.
+                height: self.texture_size[1]
+                padding: 0, dp(12), 0, 0
+                font_size: "16sp"
+                bold: True
+                color: palette.text_muted
+                halign: "left"
+                text_size: self.width, None
+            CheckOption:
+                id: system_cursor
+                size_hint: None, None
+                width: themes.width
+                height: dp(56)
+                title: "Use system cursor"
+                description: "Follows your computer's cursor size and colour settings."
+                active: preferences.use_system_cursor
+                on_active: root.apply_cursor_choice(active=self.active)
+            Widget:

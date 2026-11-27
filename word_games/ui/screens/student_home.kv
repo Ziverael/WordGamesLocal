@@ -1,0 +1,11 @@
+#:import palette word_games.ui.palette.palette
+
+<StudentHomeScreen>:
+    BoxLayout:
+        orientation: "vertical"
+        HomeHeader:
+            title: "Word Games"
+            on_settings_pressed: root.open_settings()
+        Label:
+            text: "No assignment is open."
+            color: palette.text_muted

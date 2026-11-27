@@ -6,7 +6,7 @@ Run from the repository root:
     pyinstaller --noconfirm packaging/word_games.spec
 
 Each client gets its own Analysis, so a bundle holds only what its entry
-point imports and only the .kv files listed for it. The student bundle
+point imports and only the UI files (.kv, icons) listed for it. The student bundle
 therefore carries no authoring screens.
 """
 
@@ -22,25 +22,40 @@ from kivy.tools.packaging.pyinstaller_hooks import (
 
 
 PROJECT_ROOT = Path(SPECPATH).parent
-SCREENS_DIR = "word_games/ui/screens"
+UI_DIR = "word_games/ui"
 
 
 class Client(NamedTuple):
     name: str
     entry_point: str
-    kv_files: tuple[str, ...]
+    ui_files: tuple[str, ...]
 
 
 CLIENTS = (
     Client(
         name="word-games-teacher",
         entry_point="word_games/teacher/main.py",
-        kv_files=("editor.kv", "player.kv"),
+        ui_files=(
+            "widgets.kv",
+            "screens/teacher_home.kv",
+            "screens/game_picker.kv",
+            "screens/editor.kv",
+            "screens/settings.kv",
+            "screens/player.kv",
+            "assets/icons/*/*.png",
+            "assets/cursors/*/*.png",
+        ),
     ),
     Client(
         name="word-games-student",
         entry_point="word_games/student/main.py",
-        kv_files=("player.kv",),
+        ui_files=(
+            "widgets.kv",
+            "screens/student_home.kv",
+            "screens/settings.kv",
+            "screens/player.kv",
+            "assets/cursors/*/*.png",
+        ),
     ),
 )
 
@@ -57,14 +72,21 @@ def windows_dependency_trees() -> list:
     ]
 
 
+def collect_ui_files(client: Client) -> list[tuple[str, str]]:
+    """Each entry of `ui_files` is a glob relative to the UI directory."""
+    ui_dir = PROJECT_ROOT / UI_DIR
+    return [
+        (str(file), str(file.parent.relative_to(PROJECT_ROOT)))
+        for pattern in client.ui_files
+        for file in sorted(ui_dir.glob(pattern))
+    ]
+
+
 def build_client(client: Client) -> None:
     analysis = Analysis(
         [str(PROJECT_ROOT / client.entry_point)],
         pathex=[str(PROJECT_ROOT)],
-        datas=[
-            (str(PROJECT_ROOT / SCREENS_DIR / kv_file), SCREENS_DIR)
-            for kv_file in client.kv_files
-        ],
+        datas=collect_ui_files(client),
         hookspath=hookspath(),
         runtime_hooks=runtime_hooks(),
         **get_deps_minimal(video=None, audio=None),

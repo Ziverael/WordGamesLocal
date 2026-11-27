@@ -1,0 +1,113 @@
+#:import dp kivy.metrics.dp
+#:import palette word_games.ui.palette.palette
+#:import icons word_games.ui.icons
+
+<Tile>:
+    orientation: "vertical"
+    size_hint: None, None
+    size: dp(200), dp(200)
+    padding: dp(20)
+    spacing: dp(12)
+    canvas.before:
+        PushMatrix
+        Scale:
+            origin: self.center
+            xyz: self.scale, self.scale, 1
+        Rotate:
+            origin: self.center
+            angle: self.rotation
+        Color:
+            rgba: palette.surface_pressed if self.state == "down" else palette.surface
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(12)]
+        Color:
+            rgba: palette.border
+        Line:
+            rounded_rectangle: (*self.pos, *self.size, dp(12))
+            width: dp(1)
+    canvas.after:
+        PopMatrix
+    Image:
+        source: icons.locate_icon(root.icon, palette.theme_name)
+        fit_mode: "contain"
+        mipmap: True
+    Label:
+        text: root.title
+        size_hint_y: None
+        height: self.texture_size[1]
+        font_size: "18sp"
+        bold: True
+        color: palette.text
+
+<BackButton>:
+    size_hint: None, None
+    size: dp(48), dp(48)
+    canvas:
+        Color:
+            rgba: palette.accent if self.state == "down" else palette.text
+        Line:
+            width: dp(1.6)
+            cap: "round"
+            points: [self.x + self.width * 0.72, self.center_y, self.x + self.width * 0.28, self.center_y]
+        Line:
+            width: dp(1.6)
+            cap: "round"
+            joint: "round"
+            points: [self.x + self.width * 0.48, self.center_y + self.height * 0.2, self.x + self.width * 0.28, self.center_y, self.x + self.width * 0.48, self.center_y - self.height * 0.2]
+
+<GearButton>:
+    size_hint: None, None
+    size: dp(48), dp(48)
+    color: palette.accent if self.state == "down" else palette.text
+
+<HomeHeader>:
+    size_hint_y: None
+    height: dp(64)
+    padding: dp(8), dp(8)
+    # Same width as the gear, so the title stays centred.
+    Widget:
+        size_hint_x: None
+        width: dp(48)
+    Label:
+        text: root.title
+        font_size: "32sp"
+        bold: True
+        color: palette.text
+    GearButton:
+        on_release: root.dispatch("on_settings_pressed")
+
+<ScreenHeader>:
+    size_hint_y: None
+    height: dp(64)
+    padding: dp(8), dp(8)
+    spacing: dp(8)
+    BackButton:
+        on_release: app.root.go_back()
+    Label:
+        text: root.title
+        font_size: "22sp"
+        bold: True
+        color: palette.text
+        halign: "left"
+        valign: "middle"
+        text_size: self.size
+
+# Applies to every text field in both clients. Without it Kivy draws them
+# from a light grey image, which stays light in the dark theme.
+<TextInput>:
+    background_normal: ""
+    background_active: ""
+    background_color: palette.surface
+    foreground_color: palette.text
+    hint_text_color: palette.text_muted
+    cursor_color: palette.accent
+    selection_color: (*palette.accent[:3], 0.35)
+    padding: dp(10), dp(10)
+    canvas.after:
+        Color:
+            rgba: palette.accent if self.focus else palette.border
+        Line:
+            rectangle: (*self.pos, *self.size)
+            width: dp(1.5) if self.focus else dp(1)

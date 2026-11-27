@@ -1,0 +1,14 @@
+#:import dp kivy.metrics.dp
+#:import icons word_games.ui.icons
+
+<TeacherHomeScreen>:
+    BoxLayout:
+        orientation: "vertical"
+        HomeHeader:
+            title: "Word Games"
+            on_settings_pressed: root.open_settings()
+        AnchorLayout:
+            Tile:
+                title: "New Game"
+                icon: icons.NEW_GAME
+                on_release: root.start_new_game()

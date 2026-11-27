@@ -1,0 +1,28 @@
+#:import dp kivy.metrics.dp
+#:import palette word_games.ui.palette.palette
+
+<EditorScreen>:
+    BoxLayout:
+        orientation: "vertical"
+        ScreenHeader:
+            title: root.heading
+        BoxLayout:
+            orientation: "vertical"
+            padding: dp(24)
+            spacing: dp(12)
+            Label:
+                text: "Assignment title"
+                size_hint_y: None
+                height: self.texture_size[1]
+                color: palette.text_muted
+                halign: "left"
+                text_size: self.width, None
+            TextField:
+                id: title
+                multiline: False
+                size_hint_y: None
+                height: dp(44)
+                font_size: "18sp"
+            Label:
+                text: "The content editor for this game is not available yet."
+                color: palette.text_muted
