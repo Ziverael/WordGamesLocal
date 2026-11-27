@@ -40,8 +40,16 @@ jobs:
           uv run mypy --incremental --show-error-codes --pretty || ERROR=$?
           exit ${ERROR}
 
+      # Kivy widgets need a window; Xvfb provides an invisible display.
+      - name: Install virtual display
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            xvfb xauth libgl1 libgl1-mesa-dri libegl1
+
       - name: Run tests
         run: |
+          xvfb-run --auto-servernum --server-args="-screen 0 1280x800x24" \
           uv run pytest \
             --cov word_games \
             --junitxml=coverage/junit.xml \

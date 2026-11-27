@@ -12,9 +12,19 @@ pytestmark = pytest.mark.atomic
 
 SOURCE_ROOT = Path(word_games.__file__).parent.parent
 STUDENT_ENTRY_POINT = "word_games.student.main"
+TEACHER_ENTRY_POINT = "word_games.teacher.main"
 TEACHER_ONLY_MODULES: tuple[str, ...] = (
     "word_games.teacher",
     "word_games.ui.screens.editor",
+    "word_games.ui.screens.game_picker",
+    "word_games.ui.game_catalog",
+    "word_games.ui.screens.teacher_home",
+)
+SHARED_MODULES: tuple[str, ...] = (
+    "word_games.ui.screens.settings",
+    "word_games.ui.palette",
+    "word_games.ui.preferences",
+    "word_games.config.storage",
 )
 
 
@@ -84,3 +94,46 @@ def test_student_client_does_not_load_teacher_code(
 
     # then
     assert leaked == frozenset()
+
+
+# Ast still do not resolve dynamic imports, like those with importlib.import_module()
+@pytest.fixture(scope="module")
+def names_reachable_from_teacher_client() -> frozenset[str]:
+    return _collect_reachable_names(TEACHER_ENTRY_POINT)
+
+
+def test_teacher_client_loads_its_entry_point(
+    names_reachable_from_teacher_client,
+):
+    # then
+    assert TEACHER_ENTRY_POINT in names_reachable_from_teacher_client
+
+
+CLIENT_ENTRY_POINTS: tuple[str, ...] = (
+    STUDENT_ENTRY_POINT,
+    TEACHER_ENTRY_POINT,
+)
+
+
+@pytest.mark.parametrize("entry_point", CLIENT_ENTRY_POINTS)
+def test_client_reaches_every_shared_module(entry_point):
+    # when
+    reachable = _collect_reachable_names(entry_point)
+    missing = [name for name in SHARED_MODULES if name not in reachable]
+
+    # then
+    assert missing == []
+
+
+def test_teacher_client_reaches_every_teacher_only_module(
+    names_reachable_from_teacher_client,
+):
+    # when
+    missing = [
+        name
+        for name in TEACHER_ONLY_MODULES
+        if name not in names_reachable_from_teacher_client
+    ]
+
+    # then
+    assert missing == []

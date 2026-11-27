@@ -28,5 +28,6 @@ services:
     volumes:
       - ./word_games:/opt/word_games/word_games:Z
       - ./tests:/opt/word_games/tests:Z
+      - ./design:/opt/word_games/design:Z
       - ./.local/coverage:/opt/word_games/coverage:Z
       - ./.local/.bash_history:/opt/word_games/.bash_history:Z

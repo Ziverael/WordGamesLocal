@@ -44,6 +44,11 @@ run_app(){
     uv run "word-games-$1"
 }
 
+export_icons(){
+    echo_title "Exporting design/icons/*.drawio to one PNG set per theme..."
+    uv run python design/export_icons.py "$@"
+}
+
 package_clients(){
     echo_title "Building teacher and student clients into dist/..."
     # Without this Kivy takes over Python logging and prints PyInstaller's
@@ -111,8 +116,11 @@ test_code () {
     _opts="${_opts} --cov-report xml:coverage/coverage.xml"
     _opts="${_opts} --cache-clear"
     _opts="${_opts} --pyargs ${_test_path}"
+    # Kivy widgets need a window, so the tests run on an invisible X display.
     # shellcheck disable=SC2086
-    podman-compose -f "${COMPOSE_FILE}" exec wordgames-app-dev-helper uv run --no-sync pytest ${_opts}
+    podman-compose -f "${COMPOSE_FILE}" exec wordgames-app-dev-helper \
+        xvfb-run --auto-servernum --server-args="-screen 0 1280x800x24" \
+        uv run --no-sync pytest ${_opts}
     echo "Coverage report available at $(pwd)/.local/coverage/htmlcov/index.html."
 }
 

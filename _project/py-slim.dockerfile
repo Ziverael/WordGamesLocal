@@ -8,10 +8,17 @@ ARG GUID
 RUN groupadd -g ${GUID} default_group \
     && useradd -m -u ${UID} -g default_group default_user
 
+# Xvfb and Mesa give Kivy an invisible display with software OpenGL, so
+# widget tests can create a window in this headless container.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
     curl \
     ca-certificates \
+    xvfb \
+    xauth \
+    libgl1 \
+    libgl1-mesa-dri \
+    libegl1 \
     && rm -rf /var/lib/apt/lists/*
 
 ARG PIP_VERSION

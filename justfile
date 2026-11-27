@@ -16,6 +16,8 @@ help:
     echo_highlight "                         just run"
     echo_highlight "                         just run student"
     echo_default "package              Build both clients with PyInstaller into dist/."
+    echo_default "icons                Export changed draw.io sources to PNG (needs drawio on the host)."
+    echo_highlight "                         just icons --force"
     echo_title "Development recipes:"
     echo_default "bash                 Start bash session in helper container"
     echo_default "format               Format word_games code with ruff. Example usage:"
@@ -77,6 +79,11 @@ package:
     #!/usr/bin/env sh
     {{sh_init}}
     package_clients
+
+icons *args:
+    #!/usr/bin/env sh
+    {{sh_init}}
+    export_icons {{args}}
 
 update_dotenv:
     #!/usr/bin/env sh

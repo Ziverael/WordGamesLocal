@@ -1,21 +1,21 @@
 from pathlib import Path
-from tempfile import NamedTemporaryFile
 from typing import Final
 
 from pydantic import ValidationError
 
 from word_games.assignment.model import Assignment
 from word_games.error import InvalidAssignmentFileError
+from word_games.io_ import write_text_atomically
 
 
 _MAX_ASSIGNMENT_FILE_BYTES: Final = 5 * 1024 * 1024
 
 
 def save_assignment(assignment: Assignment, path: Path) -> None:
-    with NamedTemporaryFile("w", dir=path.parent) as tmp_file:
-        tmp_file.write(assignment.model_dump_json(indent=2))
-        tmp_file.flush()
-        Path(tmp_file.name).replace(path)
+    write_text_atomically(
+        assignment.model_dump_json(indent=2),
+        path,
+    )
 
 
 def load_assignment(path: Path) -> Assignment:
